@@ -14,7 +14,7 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\ColorPicker;
-use Filament\Forms\Components\MarkdownEditor;
+use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\FileUpload;
@@ -47,7 +47,7 @@ class PostsRelationManager extends RelationManager
                             Group::make()->schema([
                                 ColorPicker::make('color'),
                             ])->columns(2),
-                            MarkdownEditor::make('content')->columnSpanFull(),
+                            RichEditor::make('content')->columnSpanFull(),
                         ]),
                 ])->columnSpan(2)->columns(2),
                 Group::make()->schema([

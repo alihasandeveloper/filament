@@ -45,4 +45,13 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function posts()
+    {
+        return $this->belongsToMany(Post::class)->withPivot(['order'])->withTimestamps();
+    }
+
+    public function userPosts() {
+        return $this->hasMany(Post::class);
+    }
 }

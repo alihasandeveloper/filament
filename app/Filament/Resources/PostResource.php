@@ -6,10 +6,12 @@ use App\Filament\Resources\PostResource\Pages;
 use App\Filament\Resources\PostResource\RelationManagers;
 use App\Models\Category;
 use App\Models\Post;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Resources\Components\Tab;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -26,6 +28,10 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Group;
+use Filament\Forms\Components\RichEditor;
+use App\Filament\Resources\PostResource\RelationManagers\AuthorsRelationManager;
+use Filament\Forms\Components\Tabs;
+
 
 class PostResource extends Resource
 {
@@ -37,23 +43,20 @@ class PostResource extends Resource
     {
         return $form
             ->schema([
-                Group::make()->schema([
-                    Section::make('Create a posts')
-                        ->description('Create posts over here')
-                        ->schema([
-                            Group::make()
-                                ->schema([
-                                    TextInput::make('title')
-                                        ->required()
-                                        // ->rules(['min:5', 'max:50', 'in:it,hi,hello'])
-                                        ->rules(['min:5', 'max:50', 'regex:/^[a-zA-Z0-9\s]+$/',])
-                                        ->maxLength(255),
-                                    TextInput::make('slug')
-                                        ->unique()
-                                        ->required()
-                                        ->maxLength(255),
-                                ])->columns(2),
-                            Group::make()->schema([
+                Tabs::make('Tabs')
+                    ->tabs([
+                        Tabs\Tab::make('Title')
+                            ->icon('heroicon-o-book-open')
+                            ->schema([
+                                TextInput::make('title')
+                                    ->required()
+                                    // ->rules(['min:5', 'max:50', 'in:it,hi,hello'])
+                                    ->rules(['min:5', 'max:50', 'regex:/^[a-zA-Z0-9\s]+$/',])
+                                    ->maxLength(255),
+                                TextInput::make('slug')
+//                                        ->unique()
+                                    ->required()
+                                    ->maxLength(255),
                                 Select::make('category_id')
                                     ->options(Category::all()->pluck('name', 'id'))
                                     // ->relationship('category', 'name')
@@ -61,31 +64,31 @@ class PostResource extends Resource
                                     ->label('Category')
                                     ->searchable(),
                                 ColorPicker::make('color'),
-                            ])->columns(2),
-                            MarkdownEditor::make('content')->columnSpanFull(),
-                        ]),
-                ])->columnSpan(2)->columns(2),
-                Group::make()->schema([
-                    Section::make('Image')
-                        ->collapsible()
-                        ->schema([
-                            Group::make()->schema([
-                                FileUpload::make('thumbnail'),
                             ]),
-                        ]),
-                    Section::make('Meta')
-                        // ->collapsible()
-                        ->schema([
-                            TagsInput::make('tags'),
-                            Checkbox::make('published'),
-                        ]),
-                ])->columnSpan(1),
+                        Tabs\Tab::make('Content')
+                            ->icon('heroicon-o-clipboard-document-list')
+                            ->schema([
+                                RichEditor::make('content')->columnSpanFull(),
+                            ]),
+                        Tabs\Tab::make('meta')
+                            ->icon('heroicon-o-information-circle')
+                            ->schema([
+                                section::make('Image')
+                                    ->collapsible()
+                                    ->schema([
+                                        Group::make()->schema([
+                                            FileUpload::make('thumbnail'),
+                                        ]),
+                                    ]),
+                                Section::make('Meta')
+                                    // ->collapsible()
+                                    ->schema([
+                                        TagsInput::make('tags'),
+                                        Checkbox::make('published'),
+                                    ]),
+                            ])
+                    ])->columnSpanFull()->persistTabInQueryString(),
             ])->columns(3);
-        // ->columns([
-        //     'sm' => 1,
-        //     'lg' => 2,
-        //     'xl' => 3,
-        // ]);
     }
 
     public static function table(Table $table): Table
@@ -119,7 +122,7 @@ class PostResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            AuthorsRelationManager::class
         ];
     }
 
