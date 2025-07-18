@@ -30,8 +30,12 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Group;
 use Filament\Forms\Components\RichEditor;
 use App\Filament\Resources\PostResource\RelationManagers\AuthorsRelationManager;
+use App\Filament\Resources\PostResource\RelationManagers\CommentsRelationManager;
 use Filament\Forms\Components\Tabs;
-
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
+use Illuminate\Support\Str;
 
 class PostResource extends Resource
 {
@@ -52,14 +56,21 @@ class PostResource extends Resource
                                     ->required()
                                     // ->rules(['min:5', 'max:50', 'in:it,hi,hello'])
                                     ->rules(['min:5', 'max:50', 'regex:/^[a-zA-Z0-9\s]+$/',])
-                                    ->maxLength(255),
-                                TextInput::make('slug')
+                                    ->maxLength(255)
+                                    ->live(onBlur: true)
+                                    ->afterStateUpdated(function (string $operation, $state, Forms\Set $set) {
+                                        if ($operation === 'create') {
+                                            $set('slug', Str::slug($state, '_'));
+                                        }
+                                    }),
+                                TextInput::make('slug')->live()
 //                                        ->unique()
                                     ->required()
                                     ->maxLength(255),
                                 Select::make('category_id')
-                                    ->options(Category::all()->pluck('name', 'id'))
-                                    // ->relationship('category', 'name')
+//                                    ->options(Category::all()->pluck('name', 'id'))
+                                    ->relationship('category', 'name')
+                                    ->preload()
                                     ->required()
                                     ->label('Category')
                                     ->searchable(),
@@ -106,7 +117,26 @@ class PostResource extends Resource
                 TextColumn::make('updated_at')->date()->label('Updated At')->sortable()->toggleable(),
             ])
             ->filters([
-                //
+                TernaryFilter::make('published'),
+
+                Filter::make('Published Post')
+                    ->query(function (Builder $query): Builder {
+                        return $query->where('published', true);
+                    })
+                    ->toggle(),
+                Filter::make('Published Post')
+                    ->query(function (Builder $query): Builder {
+                        return $query->where('published', true);
+                    })
+                    ->toggle(),
+                SelectFilter::make('category_id')
+//                    ->options(Category::all()->pluck('name', 'id'))
+                    ->multiple()
+                    ->relationship('category', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->label('Category'),
+
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -122,7 +152,8 @@ class PostResource extends Resource
     public static function getRelations(): array
     {
         return [
-            AuthorsRelationManager::class
+            AuthorsRelationManager::class,
+            CommentsRelationManager::class,
         ];
     }
 
